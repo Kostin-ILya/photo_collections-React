@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
-import Collection from './Collection'
+
+import Collection from './components/Collection'
+import Spinner from './components/Spinner'
 
 import './index.scss'
 
@@ -11,26 +13,32 @@ const App = () => {
   const [activeCategory, setActiveCategory] = useState(0)
   const [page, setPage] = useState(1)
   const [searchValue, setSearchValue] = useState('')
+  const [isLoading, setLoading] = useState(true)
 
   useEffect(() => {
+    setLoading(true)
+
     const category = activeCategory ? `&category=${activeCategory}` : ''
+
     fetch(
       `https://63b2e9adea89e3e3db386dd3.mockapi.io/collections?page=${page}&limit=3&${category}`
     )
       .then((res) => res.json())
       .then(setCollections)
       .catch((err) => {
-        console.warn(err)
-        // alert('Data loading error')
+        console.error(err)
+        alert('Data loading error')
       })
+      .finally(() => setLoading(false))
   }, [activeCategory, page])
+
   useEffect(() => {
     fetch('https://63b2e9adea89e3e3db386dd3.mockapi.io/categories')
       .then((res) => res.json())
-      .then((data) => setCategories(data))
+      .then(setCategories)
       .catch((err) => {
-        console.warn(err)
-        // alert('Data loading error')
+        console.error(err)
+        alert('Data loading error')
       })
   }, [])
 
@@ -61,13 +69,17 @@ const App = () => {
         />
       </div>
       <div className="content">
-        {collections
-          .filter((item) =>
-            item.name.toLowerCase().includes(searchValue.toLowerCase())
-          )
-          .map((col, i) => (
-            <Collection key={i} name={col.name} photos={col.photos} />
-          ))}
+        {!isLoading ? (
+          collections
+            .filter((item) =>
+              item.name.toLowerCase().includes(searchValue.toLowerCase())
+            )
+            .map((col, i) => (
+              <Collection key={i} name={col.name} photos={col.photos} />
+            ))
+        ) : (
+          <Spinner />
+        )}
       </div>
       <ul className="pagination">
         {pagesArr.map((item) => (
